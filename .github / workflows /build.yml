@@ -1,0 +1,28 @@
+name: Build
+on: [push, workflow_dispatch]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Bajar MDK de Forge
+        run: |
+          curl -L -o mdk.zip https://maven.minecraftforge.net/net/minecraftforge/forge/1.20.1-47.3.0/forge-1.20.1-47.3.0-mdk.zip
+          mkdir build-mdk
+          unzip -q mdk.zip -d build-mdk
+          rm -rf build-mdk/src
+          cp -r src build-mdk/src
+          sed -i 's/^mod_id=.*/mod_id=geoda1/' build-mdk/gradle.properties
+      - name: Compilar
+        working-directory: build-mdk
+        run: |
+          chmod +x gradlew
+          ./gradlew build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: geoda1-jar
+          path: build-mdk/build/libs/*.jar
